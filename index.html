@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Allergen Matrix — recipe to allergen report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#14201c;
+  --ink-soft:#4a5a54;
+  --paper:#ffffff;
+  --surface:#eef1ef;
+  --surface-2:#e3e8e5;
+  --line:#c9d2ce;
+  --present:#a3231c;
+  --undet:#a06414;
+  --action:#1f4d45;
+  --action-ink:#ffffff;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--surface);
+  color:var(--ink);
+  font-family:"Libre Franklin",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  font-size:16px;
+  line-height:1.5;
+  font-variant-numeric:tabular-nums;
+}
+.wrap{max-width:60rem;margin:0 auto;padding:2rem 1.25rem 5rem}
+header.top{border-bottom:2px solid var(--ink);padding-bottom:1.25rem;margin-bottom:2rem}
+h1{font-size:2rem;line-height:1.1;font-weight:700;letter-spacing:-.015em;margin:0 0 .5rem}
+.lede{margin:0;max-width:46ch;color:var(--ink-soft);font-size:1.0625rem}
+h2{font-size:1.25rem;font-weight:700;letter-spacing:-.01em;margin:2.5rem 0 .75rem}
+h3{font-size:1rem;font-weight:700;margin:1.5rem 0 .5rem}
+p{margin:0 0 1rem;max-width:68ch}
+a{color:var(--action);text-decoration-thickness:1px;text-underline-offset:2px}
+.panel{background:var(--paper);border:1px solid var(--line);padding:1.25rem}
+label.field{display:block;font-weight:500;margin-bottom:.5rem}
+textarea{
+  width:100%;min-height:11rem;resize:vertical;
+  font-family:inherit;font-size:.9375rem;line-height:1.55;
+  color:var(--ink);background:var(--paper);
+  border:1px solid var(--line);padding:.75rem;
+}
+textarea:focus-visible,button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--action);outline-offset:2px}
+.controls{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;margin-top:.875rem}
+button{
+  font:inherit;font-weight:500;cursor:pointer;
+  background:var(--action);color:var(--action-ink);
+  border:1px solid var(--action);padding:.625rem 1.125rem;
+}
+button:hover{background:#173933}
+button.quiet{background:transparent;color:var(--action);border-color:var(--line)}
+button.quiet:hover{background:var(--surface-2)}
+.hint{color:var(--ink-soft);font-size:.875rem;margin:.75rem 0 0}
+
+/* report */
+#report{margin-top:2.5rem}
+#report[hidden]{display:none}
+.stripe{border-left:6px solid var(--line);background:var(--paper);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:1rem 1.125rem}
+.stripe.resolved{border-left-color:var(--action)}
+.stripe.provisional{border-left-color:var(--undet)}
+.stripe.empty{border-left-color:var(--ink-soft)}
+.status{font-weight:700;margin:0 0 .25rem}
+.meta{margin:0;color:var(--ink-soft);font-size:.875rem;word-break:break-word}
+.glance{margin-top:1.25rem}
+.glance dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:.35rem .75rem}
+.glance dt{font-weight:500;color:var(--ink-soft)}
+.glance dd{margin:0}
+.tag{font-weight:500}
+.tag.present{color:var(--present)}
+.tag.undet{color:var(--undet)}
+.src{color:var(--ink-soft);font-weight:400}
+.note-star{margin:.75rem 0 0;font-size:.875rem;color:var(--ink-soft);max-width:60ch}
+table{width:100%;border-collapse:collapse;font-size:.9375rem}
+th,td{text-align:left;padding:.5rem .625rem;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{font-size:.8125rem;font-weight:700;border-bottom:2px solid var(--ink)}
+tbody tr:last-child td{border-bottom:none}
+td.cell{font-weight:500;white-space:nowrap}
+td.cell.present{color:var(--present)}
+td.cell.undet{color:var(--undet)}
+td.cell.none{color:var(--ink-soft);font-weight:400}
+td.trace{color:var(--ink-soft);font-size:.8125rem}
+.scroller{overflow-x:auto}
+ol.queue{margin:0;padding-left:1.25rem}
+ol.queue li{margin-bottom:.35rem}
+.act{color:var(--action);font-weight:500}
+details{border-top:1px solid var(--line);padding:.75rem 0}
+details summary{cursor:pointer;font-weight:500}
+details[open] summary{margin-bottom:.75rem}
+pre.lines{margin:0;white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:.8125rem;line-height:1.55;color:var(--ink-soft)}
+.scope{margin-top:1.25rem;border-top:1px solid var(--line);padding-top:.875rem;font-size:.8125rem;color:var(--ink-soft);max-width:70ch}
+.limits li{margin-bottom:.5rem;max-width:66ch}
+footer.foot{margin-top:3rem;border-top:1px solid var(--line);padding-top:1rem;color:var(--ink-soft);font-size:.875rem}
+.err{border-left:6px solid var(--present);background:var(--paper);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:1rem 1.125rem}
+@media (max-width:40rem){
+  h1{font-size:1.5rem}
+  .wrap{padding:1.25rem 1rem 4rem}
+  .glance dl{grid-template-columns:1fr;gap:.15rem}
+  .glance dt{margin-top:.5rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{
+  :root{--surface:#fff}
+  body{background:#fff}
+  .noprint{display:none!important}
+  .wrap{max-width:none;padding:0}
+  details{border:none}
+  details:not([open]) summary{display:none}
+  #report{margin-top:0}
+  table{font-size:11pt}
+  a{color:inherit;text-decoration:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>Allergen Matrix</h1>
+  <p class="lede">Paste a recipe. Get an allergen report where every result points at the line it came from, and anything the table can't place is marked for review instead of guessed.</p>
+</header>
+
+<section class="noprint">
+  <div class="panel">
+    <label class="field" for="input">Recipe text</label>
+    <textarea id="input" spellcheck="false" placeholder="Paste the recipe title, ingredients, and directions. A whole web page works too."></textarea>
+    <div class="controls">
+      <button id="run" type="button">Check for allergens</button>
+      <button id="sample" class="quiet" type="button">Load an example recipe</button>
+      <button id="clear" class="quiet" type="button">Clear</button>
+    </div>
+    <p class="hint">Nothing leaves your device. The report is built in your browser from the recipe and a fixed ingredient table &mdash; there is no AI model in the loop, so it cannot invent an allergen.</p>
+  </div>
+</section>
+
+<div id="error" hidden></div>
+<section id="report" hidden aria-live="polite"></section>
+
+<section class="noprint">
+  <h2>How to read the report</h2>
+  <p>Every allergen gets one of three values, and only three:</p>
+  <div class="scroller">
+  <table>
+    <thead><tr><th>Value</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td class="cell present">Present</td><td>An ingredient matched a table row that assigns this allergen. Butter is milk, by definition.</td></tr>
+      <tr><td class="cell undet">Undetermined</td><td>An ingredient may contain it, depending on brand, recipe, or processing. Soy sauce is usually brewed with wheat &mdash; but not always.</td></tr>
+      <tr><td class="cell none">Not found</td><td>Nothing in the listed ingredients indicated it. <strong>This is not a claim that the dish is free of it.</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>If any ingredient isn't in the table, the whole report turns <strong>provisional</strong> and every &ldquo;not found&rdquo; row says which ingredient is still open. An unidentified ingredient could contain anything.</p>
+  <p><strong>The review queue is the useful part.</strong> It's the short list someone has to check: a supplier label, a brand, a house recipe, or a vague ingredient to pin down. On a 35-line recipe it's usually two or three items.</p>
+
+  <h2>Why it reports less than other tools</h2>
+  <p>A free allergen checker, given the meatloaf recipe below, reported six allergen groups &mdash; including celery and sesame. Neither word appears anywhere in that recipe. Its own evidence pointed at fragments of unrelated directions, and both allergens were carried into a suggested &ldquo;Contains:&rdquo; label.</p>
+  <p>This page reports three allergens for that recipe, flags two more as undetermined, and hands you three things to check. Every line of that is traceable. A fast wrong answer and a slower right one are not interchangeable when someone is deciding what a guest can eat.</p>
+
+  <h2>What it does not do</h2>
+  <ul class="limits">
+    <li>Cross-contact, shared equipment, and preparation environment: not assessed.</li>
+    <li>Supplier labels and brand formulations: not read. That's what the review queue is for.</li>
+    <li>Sulphite concentration: recipes never state it, so that row reflects ingredient type only.</li>
+    <li>Allergens outside the US FDA 9 and EU/UK 14: recorded as out-of-scope notes, never placed in the matrix.</li>
+    <li>Spelling: never corrected. If the recipe says &ldquo;2 dashs,&rdquo; the report says &ldquo;2 dashs.&rdquo;</li>
+    <li>Ingredients named only in the directions or notes are caught only if the table already knows them. A vague one &mdash; &ldquo;add other vegetables as desired&rdquo; &mdash; passes unnoticed here, where a person reading the recipe would stop and ask.</li>
+  </ul>
+  <p>What comes out is a reviewed draft. It is not an allergen certification, and what a restaurant tells a guest stays a human decision.</p>
+
+  <footer class="foot">
+    <p>Ingredient table version 1.4 &mdash; 90 rows, each sourced. The rules, the table, and a claim-by-claim verification of one report live in the <a href="https://github.com/Dkrem444/allergen-translator">project repository</a>.</p>
+  </footer>
+</section>
+
+</div>
+
+<script>
+"use strict";
+
+/* ---------------------------------------------------------------
+   Lookup table 1.4 — the only source connecting an ingredient to
+   an allergen. m = match phrases, a = assigns, p = possible,
+   n = reason / note.
+--------------------------------------------------------------- */
+const MILK="Milk",EGG="Egg",FISH="Fish",CRUST="Crustacean shellfish",MOLL="Molluscs",
+TREE="Tree nuts",PEA="Peanuts",WHEAT="Wheat",GLUT="Other gluten cereals",SOY="Soybeans",
+SES="Sesame",MUST="Mustard",CEL="Celery",LUP="Lupin",SUL="Sulphites";
+
+const ALLERGENS=[MILK,EGG,FISH,CRUST,MOLL,TREE,PEA,WHEAT,GLUT,SOY,SES,MUST,CEL,LUP,SUL];
+
+const CHEESES=["cheese","parmesan","parmigiano-reggiano","cheddar","mozzarella","feta","ricotta","gruyere","gruyère","pecorino","cream cheese","goat cheese","brie","camembert","provolone","swiss cheese","monterey jack","blue cheese","gouda","havarti","asiago","mascarpone","queso fresco","cotija","halloumi","manchego"];
+const FISHES=["fish","salmon","tuna","cod","halibut","trout","tilapia","sardines","mackerel","sea bass","bass","snapper","haddock","pollock","catfish","swordfish","mahi mahi","herring","anchovy fillet"];
+const NUTS=["walnuts","pecans","cashews","pistachios","hazelnuts","filberts","macadamia nuts","macadamia","brazil nuts","almonds","almond flour","almond meal","almond milk","almond butter"];
+const HERBS=["parsley","basil","cilantro","coriander leaf","thyme","rosemary","oregano","dill","mint","sage","chives","bay leaf","bay leaves","tarragon","marjoram","fennel fronds"];
+const SPICES=["cumin","paprika","smoked paprika","cinnamon","nutmeg","turmeric","cayenne","ginger","cloves","cardamom","coriander","allspice","fennel seed","caraway","saffron","chili flakes","red pepper flakes"];
+const PRODUCE=["tomato","tomatoes","potato","potatoes","carrot","carrots","bell pepper","bell peppers","green bell pepper","red bell pepper","cucumber","lettuce","spinach","mushroom","mushrooms","zucchini","cabbage","avocado","broccoli","cauliflower","green beans","peas","corn on the cob","apple","apples","banana","bananas","berries","blueberries","strawberries","raspberries","orange","oranges","pear","pears","peach","peaches","kale","arugula","radish","beet","beets","squash","eggplant","asparagus","brussels sprouts","sweet potato","turnip","parsnip"];
+const MEATS=["chicken","beef","pork","lamb","turkey","duck","veal","steak","sirloin","ribeye","strip steak","filet","tenderloin","flank steak","skirt steak","brisket","chuck roast","short ribs","ground beef","ground turkey","ground pork","chicken breast","chicken breasts","chicken thighs","chicken thigh","drumsticks","wings","pork chops","pork chop","pork loin","lamb chops","roast"];
+
+const TABLE=[
+/* Milk */
+{id:"T-001",m:["butter","salted butter","unsalted butter"],a:[MILK]},
+{id:"T-002",m:["milk","whole milk","skim milk","2% milk","buttermilk","evaporated milk","condensed milk","sweetened condensed milk","milk powder","dry milk","non-fat dry milk","nonfat dry milk","goat milk","sheep milk"],a:[MILK],n:"The FDA counts milk from cows, goats, sheep, and other domesticated ruminants."},
+{id:"T-003",m:["cream","heavy cream","whipping cream","half-and-half","sour cream","creme fraiche","crème fraîche"],a:[MILK]},
+{id:"T-004",m:CHEESES,a:[MILK],n:"Includes cheese made from goat, sheep, or buffalo milk."},
+{id:"T-005",m:["yogurt","greek yogurt","yoghurt"],a:[MILK]},
+{id:"T-006",m:["ghee","clarified butter"],a:[MILK]},
+{id:"T-007",m:["whey","casein","lactose"],a:[MILK]},
+/* Egg */
+{id:"T-008",m:["egg","eggs","egg yolk","egg yolks","egg white","egg whites","whole egg","duck egg","quail egg"],a:[EGG],n:"The FDA counts eggs from domesticated chickens, ducks, geese, quail, and other fowl."},
+{id:"T-009",m:["mayonnaise","mayo"],a:[EGG],p:[MUST],n:"Mustard is a common but not universal mayonnaise ingredient."},
+{id:"T-010",m:["aioli"],p:[EGG,MUST],n:"Traditional aioli is garlic and oil; many versions add egg yolk and mustard."},
+{id:"T-011",m:["egg noodles"],a:[EGG,WHEAT]},
+/* Fish */
+{id:"T-012",m:["anchovy","anchovies","anchovy paste"],a:[FISH]},
+{id:"T-013",m:FISHES,a:[FISH]},
+{id:"T-014",m:["fish sauce"],a:[FISH]},
+{id:"T-015",m:["bonito flakes","katsuobushi"],a:[FISH]},
+{id:"T-016",m:["dashi"],p:[FISH],n:"Most dashi uses bonito; some versions use only kombu."},
+{id:"T-017",m:["worcestershire sauce","worcestershire"],p:[FISH,GLUT],n:"Many brands contain anchovy; some use barley malt vinegar. Formulation is brand-dependent."},
+/* Crustacean */
+{id:"T-018",m:["shrimp","prawns","prawn"],a:[CRUST]},
+{id:"T-019",m:["crab","lobster","crayfish","langoustine"],a:[CRUST]},
+{id:"T-020",m:["shrimp paste"],a:[CRUST]},
+{id:"T-021",m:["curry paste"],p:[CRUST,FISH],n:"Many Thai curry pastes contain shrimp paste; some contain fish sauce. Formulation is brand-dependent."},
+/* Molluscs */
+{id:"T-022",m:["clams","clam","mussels","oysters","scallops"],a:[MOLL]},
+{id:"T-023",m:["squid","calamari","octopus","snails","escargot"],a:[MOLL]},
+{id:"T-024",m:["oyster sauce"],a:[MOLL],p:[WHEAT,SOY],n:"Many brands add wheat flour or soy."},
+/* Tree nuts */
+{id:"T-025",m:["almond","almonds","almond flour","almond meal","almond milk","almond butter"],a:[TREE]},
+{id:"T-026",m:NUTS,a:[TREE]},
+{id:"T-027",m:["pine nuts","pinon nuts","pignoli"],a:[TREE],n:"On the US FDA tree nut list; not on the EU/UK tree nut list."},
+{id:"T-028",m:["marzipan","almond paste"],a:[TREE],p:[EGG],n:"Some marzipan contains egg white."},
+{id:"T-029",m:["pesto"],p:[TREE,MILK],n:"Traditional pesto contains pine nuts and cheese; recipes vary."},
+{id:"T-030",m:["mixed nuts","nuts","nut butter","praline"],p:[TREE,PEA],n:"Nut type not stated."},
+/* Peanuts */
+{id:"T-031",m:["peanuts","peanut","peanut butter","peanut flour","peanut sauce"],a:[PEA]},
+{id:"T-032",m:["peanut oil","groundnut oil"],a:[PEA],n:"The US exempts highly refined peanut oil from allergen labeling; the EU/UK does not."},
+{id:"T-033",m:["satay sauce"],p:[PEA,SOY],n:"Most satay sauce is peanut-based; many contain soy sauce."},
+/* Wheat */
+{id:"T-034",m:["all-purpose flour","bread flour","cake flour","pastry flour","whole wheat flour","self-rising flour","wheat flour","white flour"],a:[WHEAT]},
+{id:"T-035",m:["flour"],p:[WHEAT],n:"Flour type not stated."},
+{id:"T-036",m:["semolina","durum","spelt","kamut","khorasan wheat","farro","bulgur","couscous"],a:[WHEAT]},
+{id:"T-037",m:["bread","baguette","pita","flour tortilla","pizza dough","bread crumbs"],a:[WHEAT],p:[MILK,EGG,SOY,SES],n:"Bread formulations vary."},
+{id:"T-038",m:["brioche"],a:[WHEAT,EGG,MILK]},
+{id:"T-039",m:["breadcrumbs","panko"],a:[WHEAT],p:[MILK,EGG,SOY,SES],n:"Commercial breadcrumb formulations vary."},
+{id:"T-040",m:["pasta","spaghetti","spaghetti noodles","penne","linguine","fettuccine","macaroni","lasagna noodles","rigatoni","farfalle"],a:[WHEAT],p:[EGG],n:"Some pasta contains egg."},
+{id:"T-041",m:["seitan","vital wheat gluten"],a:[WHEAT]},
+{id:"T-042",m:["batter","breading","coating mix"],p:[WHEAT,EGG,MILK],n:"Composition not stated."},
+{id:"T-083",m:["glucose syrup","dextrose","maltodextrin"],p:[WHEAT],n:"Source grain not stated; may be wheat. The EU/UK exempts wheat-based glucose syrups and maltodextrins; the US has no equivalent blanket exemption."},
+/* Other gluten cereals */
+{id:"T-043",m:["barley","pearl barley","barley malt","malt extract","malt vinegar"],a:[GLUT]},
+{id:"T-044",m:["rye","rye flour","rye bread","pumpernickel"],a:[GLUT],p:[WHEAT],n:"Rye breads commonly include wheat flour."},
+{id:"T-045",m:["oats","rolled oats","quick oats","oat flour","oatmeal","oat milk","steel-cut oats"],a:[GLUT],n:"The EU/UK list includes oats among gluten cereals."},
+{id:"T-046",m:["beer","ale","lager","stout"],a:[GLUT],p:[WHEAT],n:"Beer is brewed from barley; some beers also use wheat."},
+/* Soy */
+{id:"T-047",m:["soy sauce","shoyu"],a:[SOY],p:[WHEAT],n:"Most soy sauces are brewed with wheat; some are not."},
+{id:"T-048",m:["tamari"],a:[SOY],p:[WHEAT],n:"Tamari is often made without wheat, but not always."},
+{id:"T-049",m:["tofu","tempeh","edamame","soybeans","soy milk"],a:[SOY]},
+{id:"T-050",m:["miso"],a:[SOY],p:[GLUT],n:"Some miso is made with barley."},
+{id:"T-051",m:["soy lecithin"],a:[SOY]},
+{id:"T-052",m:["soybean oil","soy oil"],a:[SOY],n:"Highly refined soybean oil is exempt from US and EU/UK allergen labeling."},
+{id:"T-084",m:["vegetable oil"],p:[SOY],n:"Oil source not stated; vegetable oil is often soybean oil."},
+/* Sesame */
+{id:"T-053",m:["sesame seeds","sesame seed","sesame oil","toasted sesame oil","tahini","sesame"],a:[SES],n:"The EU/UK has no exemption for sesame oil."},
+{id:"T-054",m:["hummus"],p:[SES],n:"Traditional hummus contains tahini; recipes vary."},
+{id:"T-055",m:["za'atar","zaatar","everything bagel seasoning"],p:[SES],n:"These blends commonly contain sesame seeds."},
+{id:"T-056",m:["furikake"],p:[SES,FISH,SOY],n:"Blends commonly contain sesame, bonito, or soy; formulations vary."},
+/* Mustard */
+{id:"T-057",m:["mustard","yellow mustard","dijon mustard","dijon","whole grain mustard","mustard seed","mustard powder","prepared mustard"],a:[MUST],p:[SUL],n:"Some prepared mustards contain wine or sulphite preservatives."},
+{id:"T-058",m:["curry powder"],p:[MUST,CEL],n:"Curry blends commonly include mustard seed or celery seed."},
+/* Celery */
+{id:"T-059",m:["celery","celery stalks","celery stalk","celery leaves","celeriac","celery root","celery seed","celery salt"],a:[CEL]},
+{id:"T-060",m:["mirepoix"],a:[CEL],n:"Mirepoix is onion, carrot, and celery by definition."},
+{id:"T-061",m:["stock","broth","bouillon","stock cube","bouillon cube"],p:[CEL,WHEAT,SOY],n:"Stocks commonly include celery; bouillon products may contain wheat or soy.",stock:true},
+{id:"T-087",m:["canned tomatoes","diced tomatoes","whole peeled tomatoes","crushed tomatoes"],p:[CEL],n:"US standard of identity (21 CFR 155.190) permits onion, peppers, and celery up to 10% by weight, plus salt, spices, and flavorings. Contents vary by brand."},
+{id:"T-088",m:["stewed tomatoes"],p:[CEL],n:"21 CFR 155.190 permits celery in stewed tomatoes and requires no declaration of onion, peppers, or celery for that style. Contents vary by brand."},
+/* Lupin */
+{id:"T-062",m:["lupin","lupine","lupin flour","lupini beans"],a:[LUP]},
+/* Sulphites */
+{id:"T-063",m:["sodium metabisulphite","sodium metabisulfite","potassium metabisulphite","potassium metabisulfite","sodium sulphite","sodium sulfite","sulphur dioxide","sulfur dioxide"],a:[SUL]},
+{id:"T-064",m:["wine","red wine","white wine","sherry","port","vermouth"],p:[SUL],n:"Sulphites are common in wine; concentration is not stated."},
+{id:"T-065",m:["red wine vinegar","white wine vinegar","balsamic vinegar","sherry vinegar","wine vinegar"],p:[SUL],n:"Wine-based vinegars commonly contain sulphites; concentration is not stated."},
+{id:"T-066",m:["dried apricots","raisins","golden raisins","dried figs","prunes","dried cranberries","dried fruit"],p:[SUL],n:"Dried fruit is often treated with sulphites."},
+{id:"T-067",m:["lemon juice","lime juice","bottled lemon juice","lemon juice from concentrate"],p:[SUL],n:"Some bottled juices contain sulphite preservatives; others do not. Brand-dependent."},
+/* Mixed */
+{id:"T-068",m:["spices","spice blend","seasoning","seasoning mix","seasoning blend"],p:[CEL,MUST,SES],n:"Blend contents not stated."},
+{id:"T-069",m:["chocolate","chocolate chips","cocoa"],p:[MILK,SOY],n:"Chocolate often contains milk solids or soy lecithin."},
+{id:"T-089",m:["croutons"],p:[WHEAT,MILK,EGG,SOY,SES],n:"Composition varies by supplier."},
+{id:"T-090",m:["sausage","breakfast sausage","italian sausage","sausage meat"],p:[WHEAT,GLUT,MILK,SOY,MUST,CEL,SUL],n:"Composition varies by supplier."},
+/* No allergen in the set */
+{id:"T-070",m:["salt","kosher salt","sea salt","black pepper","white pepper","black peppercorns","white peppercorns","peppercorns","pepper"],a:[],n:"Whole peppercorns match this row, not the single-spice row."},
+{id:"T-071",m:["sugar","brown sugar","powdered sugar","granulated sugar","honey","maple syrup"],a:[]},
+{id:"T-072",m:["water","ice"],a:[]},
+{id:"T-073",m:["olive oil","extra virgin olive oil","canola oil","avocado oil","grapeseed oil","sunflower oil"],a:[]},
+{id:"T-074",m:["garlic","onion","onions","shallot","shallots","scallion","scallions","green onion","green onions","leek","leeks","garlic cloves","garlic clove"],a:[]},
+{id:"T-075",m:HERBS,a:[]},
+{id:"T-076",m:SPICES,a:[],n:"Blends do not match this row."},
+{id:"T-077",m:["fresh lemon juice","fresh lime juice","juice of a lemon","juice of a lime","lemon","lime","lemon zest","lime zest"].concat(PRODUCE),a:[],n:"Celery and celeriac match the celery row, not this row."},
+{id:"T-078",m:MEATS,a:[],n:"Processed and cured meats do not match this row."},
+{id:"T-079",m:["rice","white rice","brown rice","rice flour","quinoa","baking soda","yeast","vanilla extract","cooked rice"],a:[]},
+{id:"T-080",m:["corn","cornstarch","cornmeal","polenta","corn tortilla"],a:[],n:"Out of scope: corn."},
+{id:"T-081",m:["coconut","shredded coconut","coconut milk","coconut cream","coconut oil"],a:[],n:"Out of scope: coconut. Removed from the FDA tree nut list in January 2025; not on the EU/UK list."},
+{id:"T-082",m:["chestnuts","chestnut"],a:[],n:"Out of scope: chestnut."},
+{id:"T-085",m:["tomato paste","tomato puree","tomato pulp","tomato concentrate"],a:[],n:"US standard of identity (21 CFR 155.191): concentrated tomato liquid; optional lemon juice or organic acids."},
+{id:"T-086",m:["tomato juice","concentrated tomato juice"],a:[],n:"US standard of identity (21 CFR 156.145): unfermented liquid from mature tomatoes; may be seasoned with salt and acidified with organic acid."}
+];
+
+/* Phrase index, longest first, so "peanut butter" beats "butter". */
+const INDEX=[];
+TABLE.forEach(r=>r.m.forEach(phrase=>INDEX.push({phrase:phrase.toLowerCase(),row:r})));
+INDEX.sort((x,y)=>y.phrase.length-x.phrase.length);
+
+/* A word that names a different food or product is not a descriptor. */
+const BLOCKED=["ice cream","cream of","cream of mushroom","honey mustard","rice wine","cooking wine","chicken sausage","almond extract","mustard greens","pepper sauce","hot pepper sauce","hot sauce","soy curls","coconut aminos","tomato sauce","ketchup","salsa","bacon","ham","deli meat","pepperoni","jerky","prosciutto","salami","chorizo","vegetable juice"];
+const FREE_FROM=/\b(vegan|plant-?based|gluten-?free|dairy-?free|egg-?free|nut-?free|soy-?free|non-?dairy|lactose-?free)\b/;
+
+const UNITS=["cup","cups","teaspoon","teaspoons","tsp","tablespoon","tablespoons","tbsp","tbs","ounce","ounces","oz","pound","pounds","lb","lbs","gram","grams","g","kilogram","kg","milliliter","ml","liter","liters","l","pinch","pinches","dash","dashs","dashes","clove","cloves","can","cans","package","packages","pkg","slice","slices","stick","sticks","bunch","bunches","head","heads","sprig","sprigs","quart","quarts","pint","pints","gallon","fillet","fillets","piece","pieces","large","medium","small","whole"];
+const COUNT_WORDS=["item","items","ingredient","ingredients","step","steps","serving","servings","piece","pieces","total","each","more","to taste","portion","portions"];
+const MODIFIERS=["green","red","yellow","orange","purple","white","golden","large","medium","small","baby","fresh","dried","frozen","finely","thinly","roughly","coarsely","freshly","lightly","warm","cold","hot","extra","light","dark","low-sodium","reduced-sodium","low sodium","reduced sodium","unsalted","salted","raw","ripe","very ripe","boneless","skinless","ground","whole","half","lean"];
+const PREP=["finely","thinly","roughly","coarsely","freshly","lightly","chopped","finely chopped","minced","diced","sliced","grated","shredded","softened","melted","cubed","peeled","cored","seeded","drained","rinsed","washed","divided","room-temperature","room temperature","cut into small pieces","cut into wedges","thinly sliced","to taste","for serving","for garnish","optional","if desired","as desired","beaten","crushed","halved","quartered","trimmed","boneless","skinless","cooked","uncooked","fresh","dried","frozen","canned","packed","plus more","or more","well","very ripe","mashed","chopped fine"];
+const GENERIC_HEADINGS=/^(ingredients?|ingredient list|what you need|directions?|instructions?|method|how it'?s done|preparation|prep|notes?|tips?|tips and variations|variations|nutrition|nutrition facts|nutrition information|serves?\b.*|yield.*|makes\b.*|steps?|cook mode|per serving.*|macronutrients|minerals|vitamins|for the .*|to serve|to assemble|garnish|equipment)$/i;
+const NON_RECIPE_HEADINGS=/^(you might also like|related recipes?|more recipes?|more .* recipes|keep exploring|browse all.*|reviews?|comments?|ratings?|nutrition|nutrition facts|nutrition information|portions per serving.*|myplate food groups|advertisement|shop|newsletter|learn more about|per serving.*|macronutrients|minerals|vitamins|similar recipes|you may also like|recommended)$/i;
+const PAGE_CONTROL=/^(save|print|add|log|share|jump|rate|pin|copy|browse|keep|learn|shop|subscribe|follow|sign|skip|search|download|email)\b/i;
+const NON_FOOD_LINE=/\b(wash hands|wash your hands|grease|preheat|line a|spray|clean the|sanitize|set the oven|oven to)\b/i;
+const SOURCE_LINE=/^(source|credit|adapted from|recipe from|courtesy of)\s*[:\-]/i;
+const OPTIONAL_CUE=/\b(optional|as desired|if desired|if using|to garnish)\b/i;
+const SERVING_CUE=/\b(serve with|serve over|serve alongside|pour over|spoon over|alongside|for dipping|top with|serve on)\b/i;
+const QTY=/^\s*[*•\-–]?\s*(\d+[\s\d\/\.]*|[½¼¾⅓⅔⅛⅜⅝⅞]+|a|an)\s/i;
+const STEP=/^\s*\d{1,2}\s*[\.\)]\s+\S/;   /* "1. Preheat the oven" is a step, not a quantity */
+
+function norm(s){return s.toLowerCase().replace(/[’']/g,"'").replace(/\s+/g," ").trim();}
+function hasWord(hay,needle){
+  const i=hay.indexOf(needle);
+  if(i<0)return false;
+  const before=i===0?" ":hay[i-1];
+  const after=i+needle.length>=hay.length?" ":hay[i+needle.length];
+  return /[^a-z0-9]/.test(before)&&/[^a-z0-9]/.test(after);
+}
+function startsWithQty(line){if(STEP.test(line))return false;return QTY.test(line);}
+function isHeading(line){
+  const t=norm(line).replace(/^[*•\-–]\s*/,"").replace(/[:.]$/,"");
+  if(GENERIC_HEADINGS.test(t))return true;
+  if(NON_RECIPE_HEADINGS.test(t))return true;
+  return false;
+}
+function stripQtyUnits(text){
+  let s=text.replace(/^\s*[*•\-–]\s*/,"");
+  s=s.replace(/\([^)]*(ounce|oz|gram|g|ml|pound|lb|each|inch)[^)]*\)/gi," ");
+  let changed=true;
+  while(changed){
+    changed=false;
+    const m=s.match(/^\s*(\d+[\d\s\/\.]*|[½¼¾⅓⅔⅛⅜⅝⅞]+)\s*/);
+    if(m){s=s.slice(m[0].length);changed=true;continue;}
+    const w=s.match(/^\s*([a-zA-Z%\-]+)\b\s*/);
+    if(w&&UNITS.includes(w[1].toLowerCase())){s=s.slice(w[0].length);changed=true;}
+  }
+  return s.trim();
+}
+function isModifierOnly(t){
+  const low=norm(t).replace(/[()]/g,"");
+  if(COUNT_WORDS.includes(low))return true;
+  const words=low.split(/\s+/).filter(Boolean);
+  if(!words.length)return true;
+  return words.every(w=>MODIFIERS.includes(w)||PREP.includes(w)||COUNT_WORDS.includes(w));
+}
+function stripPrep(term){
+  let t=term.trim().replace(/^[,;\s(\[]+|[,;\s.)\]]+$/g,"");
+  // remove trailing prep clauses
+  let guard=0;
+  while(guard++<6){
+    const low=norm(t);
+    let cut=false;
+    for(const p of PREP){
+      if(low.endsWith(" "+p)){t=t.slice(0,t.length-p.length-1).replace(/[,;\s]+$/,"");cut=true;break;}
+      if(low===p){return "";}
+    }
+    if(!cut)break;
+  }
+  // remove leading prep words
+  guard=0;
+  while(guard++<4){
+    const low=norm(t);let cut=false;
+    for(const p of PREP){
+      if(low.startsWith(p+" ")){t=t.slice(p.length+1);cut=true;break;}
+    }
+    if(!cut)break;
+  }
+  return t.replace(/^[,;\s]+|[,;\s.]+$/g,"");
+}
+function protectParens(s){return s.replace(/\(([^)]*)\)/g,(m,g)=>"("+g.replace(/,/g,"\u0001")+")");}
+function restoreParens(s){return s.replace(/\u0001/g,",");}
+
+function extractTerms(line){
+  let pre=line.replace(/\(\s*(or|and)\s+/gi," $1 ").replace(/\)\s*(?=$|,)/g," ");
+  let s=protectParens(stripQtyUnits(pre));
+  const parts=[];
+  const alt=s.split(/\s+or\s+/i);
+  const isAlt=alt.length>1;
+  alt.forEach(chunk=>{
+    chunk.split(/,|\band\b/i).forEach(seg=>{
+      const t=stripPrep(restoreParens(seg));
+      if(t&&/[a-z]/i.test(t)&&!isModifierOnly(t))parts.push(t);
+    });
+  });
+  // only the first segment of a comma list is usually the ingredient;
+  // keep later segments only when they match the table on their own.
+  const kept=[];
+  parts.forEach((t,i)=>{
+    if(i===0||isAlt||matchTerm(t))kept.push(t);
+  });
+  return {terms:kept.length?kept:parts.slice(0,1),alternative:isAlt};
+}
+
+function matchTerm(termRaw){
+  const term=norm(termRaw);
+  if(!term)return null;
+  if(FREE_FROM.test(term))return null;
+  for(const b of BLOCKED){if(hasWord(term,b))return null;}
+  for(const entry of INDEX){
+    if(hasWord(term,entry.phrase))return entry;
+    if(entry.phrase.endsWith("s")&&hasWord(term,entry.phrase.slice(0,-1)))return entry;
+    if(!entry.phrase.endsWith("s")&&hasWord(term,entry.phrase+"s"))return entry;
+  }
+  return null;
+}
+
+function actionFor(status,row,termText,line){
+  const t=norm(termText),l=norm(line||"");
+  if(/\b(house|homemade|home-made|our)\b/.test(t)||/\b(house|homemade)\b/.test(l))return "Check house recipe";
+  if(status==="UNRESOLVED"){
+    const vague=["oil","sauce","seasoning","spices","nuts","flour","vinegar","stock","broth","other vegetables","vegetables","herbs","cheese","juice","syrup","dressing","marinade"];
+    if(vague.includes(t))return "Clarify ingredient";
+    return "Check supplier label";
+  }
+  const reason=norm(row&&row.n||"");
+  if(reason.includes("not stated"))return "Clarify ingredient";
+  if(reason.includes("brand"))return "Confirm brand";
+  return "Check supplier label";
+}
+
+function rangeList(nums){
+  if(!nums.length)return "None";
+  const s=[...nums].sort((a,b)=>a-b);
+  const out=[];let i=0;
+  while(i<s.length){
+    let j=i;
+    while(j+1<s.length&&s[j+1]===s[j]+1)j++;
+    if(j-i>=2){out.push("L"+s[i]+"\u2013L"+s[j]);i=j+1;}
+    else{for(let k=i;k<=j;k++)out.push("L"+s[k]);i=j+1;}
+  }
+  return out.join(", ");
+}
+
+function translate(raw){
+  const lines=raw.split(/\r?\n/).map(l=>l.replace(/\s+$/,"")).filter(l=>l.trim()!=="");
+  if(!lines.length)return null;
+
+  /* classify lines */
+  let inIngredients=false,inJunk=false,inSteps=false;
+  const kind=[]; // 'ingredient' | 'other' | 'heading' | 'junk'
+  lines.forEach((line,idx)=>{
+    const t=norm(line).replace(/[:.]$/,"");
+    if(isHeading(line)){
+      inJunk=NON_RECIPE_HEADINGS.test(t);
+      inIngredients=/^(ingredients?|ingredient list|what you need|for the .*|to assemble)$/i.test(t);
+      inSteps=/^(directions?|instructions?|method|how it'?s done|preparation|prep|steps?|notes?|tips?|tips and variations|variations|to serve)$/i.test(t);
+      kind[idx]="heading";
+      return;
+    }
+    if(inJunk){kind[idx]="junk";return;}
+    if(inSteps){kind[idx]="other";return;}
+    if(startsWithQty(line)||(inIngredients&&!PAGE_CONTROL.test(line))){kind[idx]="ingredient";return;}
+    kind[idx]="other";
+  });
+
+  /* terms from ingredient lines */
+  const rows=[]; // {id, text, status, rowId, allergens[], notes[], lineNo}
+  const ingredientTerms=[];
+  lines.forEach((line,idx)=>{
+    if(kind[idx]!=="ingredient")return;
+    const {terms,alternative}=extractTerms(line);
+    const built=[];
+    terms.forEach(t=>{
+      const entry=matchTerm(t);
+      let text=t,extra=null;
+      if(entry&&entry.row.stock){
+        const low=norm(t);const pos=low.indexOf(entry.phrase);
+        const before=t.slice(0,pos).trim();
+        if(before){
+          const words=before.split(/\s+/);
+          const srcWord=words[words.length-1];
+          if(matchTerm(srcWord)){
+            extra={text:srcWord};
+            text=(words.slice(0,-1).join(" ")+" "+t.slice(pos)).trim();
+          }
+        }
+      }
+      if(extra)built.push({text:extra.text});
+      built.push({text:text});
+    });
+    built.forEach((b,i)=>{
+      const entry=matchTerm(b.text);
+      const row=entry?entry.row:null;
+      const assigns=row&&row.a?row.a:[];
+      const possible=row&&row.p?row.p:[];
+      let status;
+      if(!row)status="UNRESOLVED";
+      else if(assigns.length)status="MATCHED-ALLERGEN";
+      else if(possible.length)status="MATCHED-POSSIBLE";
+      else status="MATCHED-NONE";
+      const notes=[];
+      if(alternative&&built.length>1)notes.push("Alternative");
+      else if(OPTIONAL_CUE.test(line))notes.push("Optional");
+      else if(SERVING_CUE.test(line))notes.push("Serving");
+      if(row&&row.n&&(possible.length||/out of scope/i.test(row.n)))notes.push(row.n);
+      const id="L"+(idx+1)+(built.length>1?"."+(i+1):"");
+      const rec={id,lineNo:idx+1,text:b.text,status,row,assigns,possible,notes,line};
+      rows.push(rec);ingredientTerms.push(rec);
+    });
+  });
+
+  /* references and new terms on other lines */
+  const firstIngIdx=kind.findIndex(k=>k==="ingredient");
+  const otherRows=[];
+  lines.forEach((line,idx)=>{
+    if(kind[idx]!=="other")return;
+    if(SOURCE_LINE.test(line.trim())){return;}
+    const low=norm(line);
+    const refs=new Set();
+    if(/\ball ingredients\b|\bthe rest of the ingredients\b/.test(low)){
+      ingredientTerms.forEach(r=>refs.add(r.lineNo));
+    }
+    ingredientTerms.forEach(r=>{
+      const head=norm(r.text).replace(/\([^)]*\)/g,"").trim();
+      if(!head)return;
+      const words=head.split(/\s+/);
+      const last=words[words.length-1];
+      if(hasWord(low,head)||(last.length>3&&hasWord(low,last)))refs.add(r.lineNo);
+    });
+    // headings referenced ("the glaze")
+    lines.forEach((hl,hidx)=>{
+      if(kind[hidx]!=="heading")return;
+      const words=norm(hl).replace(/[^a-z\s]/g,"").split(/\s+/).filter(w=>w.length>3&&!["ingredients","directions","instructions","what","need","notes","tips"].includes(w));
+      words.forEach(w=>{if(hasWord(low,w))refs.add(hidx+1);});
+    });
+    let newTerms=[];
+    const beforeList=firstIngIdx>=0&&idx<firstIngIdx; /* title, headnote, page chrome */
+    if(!NON_FOOD_LINE.test(low)&&!beforeList){
+      for(const entry of INDEX){
+        if(!hasWord(low,entry.phrase))continue;
+        let covered=false;
+        ingredientTerms.forEach(r=>{if(hasWord(norm(r.text),entry.phrase))covered=true;});
+        if(covered)continue;
+        if(newTerms.some(t=>hasWord(t.phrase,entry.phrase)))continue;
+        if(BLOCKED.some(b=>hasWord(low,b)&&hasWord(b,entry.phrase)))continue;
+        newTerms.push({phrase:entry.phrase,row:entry.row});
+      }
+    }
+    if(newTerms.length){
+      newTerms.forEach((nt,i)=>{
+        const assigns=nt.row.a||[],possible=nt.row.p||[];
+        const status=assigns.length?"MATCHED-ALLERGEN":(possible.length?"MATCHED-POSSIBLE":"MATCHED-NONE");
+        const notes=[];
+        if(SERVING_CUE.test(low))notes.push("Serving");
+        else if(OPTIONAL_CUE.test(low))notes.push("Optional");
+        if(nt.row.n&&(possible.length||/out of scope/i.test(nt.row.n)))notes.push(nt.row.n);
+        if(i===0&&refs.size)notes.push("References "+rangeList([...refs]));
+        rows.push({id:"L"+(idx+1)+(newTerms.length>1?"."+(i+1):""),lineNo:idx+1,text:nt.phrase,status,row:nt.row,assigns,possible,notes,line});
+      });
+    } else if(refs.size){
+      otherRows.push({id:"L"+(idx+1),lineNo:idx+1,text:"\u2014",status:"NO-INGREDIENT",row:null,assigns:[],possible:[],notes:["References "+rangeList([...refs])],line});
+    }
+  });
+
+  const allRows=rows.concat(otherRows).sort((a,b)=>a.lineNo-b.lineNo||a.id.localeCompare(b.id));
+
+  /* cells */
+  const cells={};
+  ALLERGENS.forEach(a=>{
+    const assigners=allRows.filter(r=>r.assigns.includes(a));
+    const flaggers=allRows.filter(r=>r.possible.includes(a));
+    if(assigners.length)cells[a]={value:"Present",assigners,flaggers};
+    else if(flaggers.length)cells[a]={value:"Undetermined",assigners:[],flaggers};
+    else cells[a]={value:"Not found in listed ingredients",assigners:[],flaggers:[]};
+  });
+
+  const unresolved=allRows.filter(r=>r.status==="UNRESOLVED");
+  const termCount=allRows.filter(r=>r.status!=="NO-INGREDIENT").length;
+  let status;
+  if(!termCount)status={kind:"empty",text:"NO INGREDIENTS FOUND \u2014 the input contains no ingredient terms."};
+  else if(unresolved.length)status={kind:"provisional",text:"PROVISIONAL \u2014 "+unresolved.length+" unresolved term"+(unresolved.length>1?"s":"")+": "+unresolved.map(r=>r.id).join(", ")+". \u201cNot found\u201d cells are provisional until reviewed."};
+  else status={kind:"resolved",text:"RESOLVED \u2014 all ingredient terms matched."};
+
+  /* queue */
+  const queue=allRows.filter(r=>r.status==="UNRESOLVED"||(r.possible&&r.possible.length))
+    .map(r=>({id:r.id,text:r.text,action:actionFor(r.status,r.row,r.text,r.line)}));
+
+  /* header */
+  const firstIngredientIdx=firstIngIdx;
+  const candidates=[];
+  lines.forEach((line,idx)=>{
+    if(firstIngredientIdx>=0&&idx>=firstIngredientIdx)return;
+    if(kind[idx]==="junk")return;
+    const t=line.trim();
+    if(startsWithQty(t))return;
+    if(GENERIC_HEADINGS.test(norm(t).replace(/[:.]$/,"")))return;
+    if(NON_RECIPE_HEADINGS.test(norm(t).replace(/[:.]$/,"")))return;
+    if(PAGE_CONTROL.test(t))return;
+    if(t.length>60)return;
+    if(/[.!?]$/.test(t))return;
+    if(/\d{2,}|[%$]|\bcal\b/i.test(t))return;
+    candidates.push({idx,text:t});
+  });
+  let recipe="Not in source",recipeNote="";
+  if(candidates.length){
+    const chosen=candidates[candidates.length-1];
+    recipe=chosen.text+" (L"+(chosen.idx+1)+")";
+    if(candidates.length>1){
+      const others=candidates.slice(0,-1).reverse().slice(0,3).map(c=>"L"+(c.idx+1));
+      recipeNote=" \u2014 unconfirmed; candidates: "+others.join(", ");
+    }
+  }
+  let source="Not in source";
+  lines.forEach((line,idx)=>{
+    if(SOURCE_LINE.test(line.trim()))source=line.trim().replace(SOURCE_LINE,"").trim()+" (L"+(idx+1)+")";
+  });
+
+  /* grouped line accounting */
+  const accountedLines=new Set(allRows.map(r=>r.lineNo));
+  const grouped=[];
+  lines.forEach((l,i)=>{if(!accountedLines.has(i+1))grouped.push(i+1);});
+
+  return {lines,kind,rows:allRows,cells,status,queue,recipe,recipeNote,source,grouped,unresolved};
+}
+
+/* ---------------------------------------------------------------
+   Rendering
+--------------------------------------------------------------- */
+const CLASS={"Present":"present","Undetermined":"undet"};
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+function traceFor(a,rep){
+  const c=rep.cells[a];
+  if(c.value==="Not found in listed ingredients"){
+    if(rep.status.kind==="provisional")return "\u2014 &middot; open: "+rep.unresolved.map(r=>r.id).join(", ");
+    return "\u2014";
+  }
+  const bits=[];
+  c.assigners.forEach(r=>bits.push(r.id+" \u2192 "+r.row.id));
+  c.flaggers.forEach(r=>bits.push(r.id+" \u2192 "+r.row.id+" (possible)"));
+  return esc(bits.join("; "));
+}
+
+function glanceList(rep,which){
+  const out=[];
+  ALLERGENS.forEach(a=>{
+    const c=rep.cells[a];
+    if(which==="Present"&&c.value!=="Present")return;
+    if(which==="Undetermined"&&c.value!=="Undetermined")return;
+    const src=(which==="Present"?c.assigners:c.flaggers);
+    const seen=[],star=[];
+    src.forEach(r=>{
+      const key=norm(r.text);
+      if(seen.some(s=>norm(s)===key))return;
+      seen.push(r.text);
+      star.push(r.notes.some(n=>n==="Alternative"||n==="Optional"||n==="Serving"));
+    });
+    const names=seen.map((t,i)=>esc(t)+(star[i]?"*":"")).join(", ");
+    out.push('<span class="tag '+(which==="Present"?"present":"undet")+'">'+esc(a)+'</span> <span class="src">('+names+')</span>');
+  });
+  return out.length?out.join(" &middot; "):"\u2014";
+}
+
+function render(rep){
+  const el=document.getElementById("report");
+  const anyStar=/\*/.test(glanceList(rep,"Present")+glanceList(rep,"Undetermined"));
+
+  let h='<div class="stripe '+rep.status.kind+'">';
+  h+='<p class="status">'+esc(rep.status.text)+'</p>';
+  h+='<p class="meta">Recipe: '+esc(rep.recipe)+esc(rep.recipeNote)+'<br>Source: '+esc(rep.source)+'<br>Ingredient table 1.4</p></div>';
+
+  h+='<div class="glance panel"><dl>';
+  h+='<dt>Present</dt><dd>'+glanceList(rep,"Present")+'</dd>';
+  h+='<dt>Undetermined</dt><dd>'+glanceList(rep,"Undetermined")+'</dd>';
+  h+='<dt>Needs review</dt><dd>'+(rep.queue.length?rep.queue.length+" item"+(rep.queue.length>1?"s":""):"\u2014")+'</dd>';
+  h+='</dl>';
+  if(anyStar)h+='<p class="note-star">* Listed as optional, as an alternative, or as something the dish is served with. May not be used in every preparation &mdash; confirm which ingredients were used.</p>';
+  h+='</div>';
+
+  h+='<h2>Allergen matrix</h2><div class="scroller"><table><thead><tr><th>Allergen</th><th>Result</th><th>Traces to</th></tr></thead><tbody>';
+  ALLERGENS.forEach(a=>{
+    const c=rep.cells[a];
+    const cls=CLASS[c.value]||"none";
+    const label=c.value==="Not found in listed ingredients"?"Not found":c.value;
+    h+='<tr><td>'+esc(a)+'</td><td class="cell '+cls+'">'+esc(label)+'</td><td class="trace">'+traceFor(a,rep)+'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+
+  h+='<h2>Review queue</h2>';
+  if(rep.queue.length){
+    h+='<ol class="queue">';
+    rep.queue.forEach(q=>{h+='<li>'+esc(q.id)+' &mdash; &ldquo;'+esc(q.text)+'&rdquo; &mdash; <span class="act">'+esc(q.action)+'</span></li>';});
+    h+='</ol>';
+    h+='<div class="controls noprint"><button id="copyq" class="quiet" type="button">Copy the review queue</button><button id="print" class="quiet" type="button">Print the report</button></div>';
+  }else{
+    h+='<p>None.</p><div class="controls noprint"><button id="print" class="quiet" type="button">Print the report</button></div>';
+  }
+
+  h+='<details><summary>Line accounting &mdash; every line, once</summary><div class="scroller"><table><thead><tr><th>ID</th><th>Ingredient</th><th>Result</th><th>Table row</th><th>Note</th></tr></thead><tbody>';
+  rep.rows.forEach(r=>{
+    const res=r.status==="NO-INGREDIENT"?"\u2014":(r.status==="UNRESOLVED"?"Not in table":
+      (r.assigns.length?r.assigns.join(", "):"")+(r.possible.length?(r.assigns.length?", ":"")+r.possible.join(" (possible), ")+" (possible)":"")||"No allergen in set");
+    h+='<tr><td>'+esc(r.id)+'</td><td>'+esc(r.text)+'</td><td>'+esc(res)+'</td><td>'+esc(r.row?r.row.id:"\u2014")+'</td><td class="trace">'+esc(r.notes.join("; ")||"\u2014")+'</td></tr>';
+  });
+  h+='<tr><td>'+esc(rangeList(rep.grouped))+'</td><td>\u2014</td><td>\u2014</td><td>\u2014</td><td class="trace">No ingredient mentions</td></tr>';
+  h+='</tbody></table></div></details>';
+
+  h+='<details><summary>Numbered source &mdash; the recipe exactly as pasted</summary><pre class="lines">';
+  h+=rep.lines.map((l,i)=>"L"+(i+1)+" "+esc(l)).join("\n");
+  h+='</pre></details>';
+
+  h+='<p class="scope">This report lists allergens identified in the listed ingredients using ingredient table 1.4. It covers the US FDA major food allergens and the EU/UK declarable allergens only. It does not assess cross-contact, supplier formulation changes, sulphite concentration, or the preparation environment. It is not an allergen certification. Undetermined results and unresolved ingredients need a person to check them before this information is shared with a guest.</p>';
+
+  el.innerHTML=h;
+  el.hidden=false;
+
+  const pb=document.getElementById("print");
+  if(pb)pb.addEventListener("click",()=>window.print());
+  const cb=document.getElementById("copyq");
+  if(cb)cb.addEventListener("click",()=>{
+    const text=rep.queue.map(q=>"- "+q.text+" ("+q.id+") — "+q.action).join("\n");
+    try{
+      navigator.clipboard.writeText(text).then(()=>{cb.textContent="Copied";setTimeout(()=>cb.textContent="Copy the review queue",1600);},fallback);
+    }catch(e){fallback();}
+    function fallback(){
+      const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();
+      try{document.execCommand("copy");cb.textContent="Copied";setTimeout(()=>cb.textContent="Copy the review queue",1600);}catch(e){cb.textContent="Copy failed \u2014 select the list above";}
+      document.body.removeChild(ta);
+    }
+  });
+}
+
+const SAMPLE=`Glazed Meatloaf
+
+Ingredients
+1 teaspoon vegetable oil
+1 onion, chopped
+1/2 green bell pepper, cored and diced
+2 cloves garlic, peeled and diced
+1 teaspoon dried thyme
+2 tablespoons tomato paste
+1/2 cup water
+1 tablespoon yellow mustard
+1/2 teaspoon salt
+1/4 teaspoon black pepper
+1 pound ground beef or turkey
+1 large egg
+1/2 cup rolled oats
+For the Glaze:
+1 teaspoon tomato paste
+1 teaspoon yellow mustard
+
+Directions
+1. Preheat the oven to 325 °F. Lightly grease a baking sheet.
+2. Put a skillet over medium heat and when it is hot, add the oil.
+3. Add the onion, bell pepper, garlic, and thyme and cook about 10 minutes until golden.
+4. Lower the heat and add the water and tomato paste.
+5. Cook about 10 minutes until the onion is soft and most of the liquid has been absorbed.
+6. Set aside to cool.
+7. Add the mustard, salt and pepper.
+8. While the onion mixture is cool, put the ground beef, 4 tablespoons rolled oats and the egg in the bowl and gently mix, by hand.
+9. Add the cooled onion mixture and gently mix again until everything is thoroughly incorporated.
+10. Do not over mix.
+11. Form the mixture into a loaf about 8x4 inches and put on the prepared baking sheet.
+12. To make the glaze: Put the tomato paste and mustard in a small bowl and mix well.
+13. Rub on top of the meatloaf and sprinkle with the remaining 2 tablespoons rolled oats.
+14. Put in the oven to cook about 1 hour until deep brown and cooked throughout.
+15. Serve right away or cover and refrigerate up to 2 days.
+
+Source: USDA Center for Nutrition Policy and Promotion, MyPlate Kitchen`;
+
+const input=document.getElementById("input");
+const errEl=document.getElementById("error");
+
+function run(){
+  errEl.hidden=true;errEl.innerHTML="";
+  const raw=input.value;
+  if(!raw.trim()){
+    errEl.innerHTML='<div class="err"><p class="status">Nothing to check</p><p class="meta">Paste a recipe into the box, or load the example.</p></div>';
+    errEl.hidden=false;
+    document.getElementById("report").hidden=true;
+    input.focus();
+    return;
+  }
+  const rep=translate(raw);
+  render(rep);
+  document.getElementById("report").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+document.getElementById("run").addEventListener("click",run);
+document.getElementById("sample").addEventListener("click",()=>{input.value=SAMPLE;input.focus();run();});
+document.getElementById("clear").addEventListener("click",()=>{
+  input.value="";document.getElementById("report").hidden=true;errEl.hidden=true;input.focus();
+});
+input.addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&e.key==="Enter")run();});
+</script>
+</body>
+</html>
